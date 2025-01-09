@@ -27,7 +27,7 @@ def read_excel(row):
         name = sheet.cell(row=row, column=1).value
         account = sheet.cell(row=row, column=2).value
         password = sheet.cell(row=row, column=3).value
-        if name is None or account is None or password is None:
+        if account is None or password is None:
             return None
         account_info = AccountInfo(row, name, account, password)
         print(f"账号: {account}, 密码: {password}")

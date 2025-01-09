@@ -56,8 +56,48 @@ def getCJMC(cj):
     return cj
 
 
+# 写入密码错误等信息
+def writeErrorInfo(ksh, errorInfo):
+    workbook = openpyxl.load_workbook(r"D:\getScore\2024学员成绩表.xlsx")
+    match_sheet = None
+    match_row = None
+    # 遍历所有sheet页
+    for sheet_name in workbook.sheetnames:
+        sheet = workbook[sheet_name]
+        # 查找包含 "准考证号" 的列
+        ksh_column = None
+        for col in range(1, sheet.max_column + 1):
+            header_cell = sheet.cell(row=1, column=col).value
+            if header_cell and "准考证号" in str(header_cell):
+                ksh_column = col
+                break
+
+        if ksh_column is None:
+            print(f'"准考证号" 列不存在: {sheet_name}')
+            continue
+
+        # 查找匹配的行
+        for row in range(2, sheet.max_row + 1):  # 从第二行开始遍历，假设第一行为标题行
+            cell_value = sheet.cell(row=row, column=ksh_column).value
+            if str(cell_value).strip() == str(ksh).strip():
+                match_sheet = sheet
+                match_row = row
+                break
+
+        if match_sheet and match_row:
+            break
+    if not match_sheet or not match_row:
+        print(f"未找到准考证号为 {ksh} 的记录")
+    else:
+        # print(f"找到匹配学生在 sheet: {match_sheet.title}, 行: {match_row}")
+        # 根据查到的写入查询明细
+        # 写入成绩match_sheet和match_row 再第一个单元格写入详情
+        match_sheet.cell(row=match_row, column=1).value = errorInfo
+        workbook.save((r"D:\getScore\2024学员成绩表.xlsx"))
+
+
 def writeExcel(resultData):
-    #result_str = json.dumps(resultData, ensure_ascii=False, indent=4)
+    # result_str = json.dumps(resultData, ensure_ascii=False, indent=4)
     # print("最终结果:\n" + result_str)
     print("写入excel中...")
 
@@ -75,7 +115,9 @@ def writeExcel(resultData):
     xm = resultData["xm"]
     kmcjTotal = resultData["kmcjTotal"]
     sjkcjTotal = resultData["sjkcjTotal"]
-    detailStr="笔试已过"+str(kmcjTotal)+"科"+",实践课已过"+str(sjkcjTotal)+"科"
+    detailStr = (
+        "笔试已过" + str(kmcjTotal) + "科" + ",实践课已过" + str(sjkcjTotal) + "科"
+    )
     match_sheet = None
     match_row = None
 
@@ -83,13 +125,15 @@ def writeExcel(resultData):
     for sheet_name in workbook.sheetnames:
         sheet = workbook[sheet_name]
 
-       # 查找包含 "准考证号" 的列
+        # 查找包含 "准考证号" 的列
         ksh_column = None
         for col in range(1, sheet.max_column + 1):
             header_cell = sheet.cell(row=1, column=col).value
             if header_cell and "准考证号" in str(header_cell):
                 ksh_column = col
-                print(f'找到 "准考证号" 在{sheet_name},第: {openpyxl.utils.get_column_letter(col)}列')
+                print(
+                    f'找到 "准考证号" 在{sheet_name},第: {openpyxl.utils.get_column_letter(col)}列'
+                )
                 break
 
         if ksh_column is None:
@@ -100,7 +144,7 @@ def writeExcel(resultData):
         for row in range(2, sheet.max_row + 1):  # 从第二行开始遍历，假设第一行为标题行
             cell_value = sheet.cell(row=row, column=ksh_column).value
             if str(cell_value).strip() == str(ksh).strip():
-                #print('找到准考证号为 " + str(ksh) + " 的记录"')
+                # print('找到准考证号为 " + str(ksh) + " 的记录"')
                 match_sheet = sheet
                 match_row = row
                 break
@@ -108,16 +152,16 @@ def writeExcel(resultData):
         if match_sheet and match_row:
             break
     if not match_sheet or not match_row:
-        #print(f"未找到准考证号为 {ksh} 的记录")
+        # print(f"未找到准考证号为 {ksh} 的记录")
         reason = "未找到准考证号为" + str(ksh) + "的记录"
         write_excel(accountInfo.row, reason)
         driver.back()
         driver.refresh()
         return
 
-    #print(f"找到匹配学生在 sheet: {match_sheet.title}, 行: {match_row}")
+    # print(f"找到匹配学生在 sheet: {match_sheet.title}, 行: {match_row}")
 
-    #根据查到的写入查询明细
+    # 根据查到的写入查询明细
     # 写入成绩match_sheet和match_row 再第一个单元格写入详情
     match_sheet.cell(row=match_row, column=1).value = detailStr
 
@@ -140,7 +184,6 @@ def writeExcel(resultData):
                 ):
                     kmdm_to_col_index[item["KMDM"]] = index
                     break
-
 
     for item in resultData["rows"]:
         kmdm = item["KMDM"]
@@ -188,7 +231,7 @@ def getRequest(Cookies):
     }
     payload = {}
     response = requests.post(ksxxUrl, headers=headers, json=payload)
-    #("Response Body:", response.text)
+    # ("Response Body:", response.text)
     ksxx_json = json.loads(response.text)
     if "error" in ksxx_json:
         error_code = ksxx_json["error"]["code"]
@@ -208,10 +251,8 @@ def getRequest(Cookies):
     response = requests.post(kmcjUrl, headers=headers, json=payload)
     if response.text:
         kmcj_json = json.loads(response.text)
-        #print(f"已通过笔试科目: {kmcj_json['result']['total']},科目信息{kmcj_json['result']['rows']}")
-        print(
-            f"已通过笔试科目: {kmcj_json['result']['total']}"
-        )
+        # print(f"已通过笔试科目: {kmcj_json['result']['total']},科目信息{kmcj_json['result']['rows']}")
+        print(f"已通过笔试科目: {kmcj_json['result']['total']}")
     else:
         print(f"未查询到已通过笔试科目")
     # print("Status Code:", response.status_code)
@@ -221,9 +262,7 @@ def getRequest(Cookies):
     # print("Response Body:", response.text)
     if response.text:
         sjkcj_json = json.loads(response.text)
-        print(
-            f"已通过实践科目: {sjkcj_json['result']['total']}"
-        )
+        print(f"已通过实践科目: {sjkcj_json['result']['total']}")
     else:
         print(f"未查询到已通过实践科目")
     # 合并笔试成绩和实践成绩结果
@@ -240,8 +279,8 @@ def getRequest(Cookies):
         "xm": ksxx_json["result"]["data"]["xm"],
         "ksh": ksxx_json["result"]["data"]["ksh"],
         "total": merged_total,
-        "kmcjTotal":kmcj_json["result"]["total"],
-        "sjkcjTotal":sjkcj_json["result"]["total"],
+        "kmcjTotal": kmcj_json["result"]["total"],
+        "sjkcjTotal": sjkcj_json["result"]["total"],
         "rows": merged_rows,
     }
     # 调用写入excel函数
@@ -277,10 +316,10 @@ def goLogin():
     global current_row
     accountInfo = read_excel(current_row)
     if accountInfo is None:
-        print("成绩录入完成，共"+str(current_row-2)+"条数据")
+        print("成绩录入完成，共" + str(current_row - 2) + "条数据")
         print(f"整体耗时:{time.time() - first_start_time:.4f} 秒")
         return
-    
+
     print(f"当前查询到第{current_row-1}条数据")
     # 只要读取到账号密码 就+1 下次就找下一行
     reason = ""  # 清空查询明细
@@ -294,14 +333,14 @@ def goLogin():
     # 获取验证码图片的位置和大小
     location = captcha_element.location
     size = captcha_element.size
-    #print(f"查找验证码位置耗时:{time.time() - start_time:.4f} 秒")
+    # print(f"查找验证码位置耗时:{time.time() - start_time:.4f} 秒")
 
     start_time = time.time()
     # 截取整个屏幕
     screenshot = driver.get_screenshot_as_png()
     screenshot_np = np.frombuffer(screenshot, np.uint8)
     screenshot_cv = cv2.imdecode(screenshot_np, cv2.IMREAD_COLOR)
-    #print(f"截取整个屏幕耗时: {time.time() - start_time:.4f} 秒")
+    # print(f"截取整个屏幕耗时: {time.time() - start_time:.4f} 秒")
 
     # 计算验证码图片的实际位置
     start_time = time.time()
@@ -309,12 +348,12 @@ def goLogin():
     top = int(location["y"])
     right = int(left + size["width"])
     bottom = int(top + size["height"])
-    #print(f"计算验证码图片的实际位置耗时: {time.time() - start_time:.4f} 秒")
+    # print(f"计算验证码图片的实际位置耗时: {time.time() - start_time:.4f} 秒")
 
     # 截取验证码图片
     start_time = time.time()
     captcha_image = screenshot_cv[top:bottom, left:right]
-    #print(f"截取验证码图片耗时: {time.time() - start_time:.4f} 秒")
+    # print(f"截取验证码图片耗时: {time.time() - start_time:.4f} 秒")
 
     # 保存原始验证码图片（可选）cl
     # 开始计时
@@ -325,7 +364,7 @@ def goLogin():
         unique_id
     )  # 使用双反斜杠进行转义  # 路径不能包含中文
     # 检查文件夹是否存在
-    #folder_path = os.path.dirname(captcha_save_path)
+    # folder_path = os.path.dirname(captcha_save_path)
     # if not os.path.exists(folder_path):
     #     os.makedirs(folder_path)
     #     print(f"文件夹 {folder_path} 不存在，已创建。")
@@ -333,11 +372,11 @@ def goLogin():
     #     print(f"文件夹 {folder_path} 存在。")
 
     # 打印保存路径
-    #print(f"验证码保存路径: {captcha_save_path}")
+    # print(f"验证码保存路径: {captcha_save_path}")
     start_time = time.time()
     cv2.imwrite(captcha_save_path, captcha_image)
     # 结束计时
-    #print(f"验证码图片保存耗时: {time.time() - start_time:.4f} 秒")
+    # print(f"验证码图片保存耗时: {time.time() - start_time:.4f} 秒")
 
     # 检查文件是否存在
     if not os.path.exists(captcha_save_path):
@@ -345,9 +384,9 @@ def goLogin():
 
     start_time = time.time()
     ocr_model_path = get_resource_path(r"onnx\common_old.onnx")
-    ocr = ddddocr.DdddOcr(show_ad=False,charsets_path=ocr_model_path)
+    ocr = ddddocr.DdddOcr(show_ad=False, charsets_path=ocr_model_path)
     # ocr = ddddocr.DdddOcr()  # 切换为第二套ocr模型为 ocr = ddddocr.DdddOcr(beta=True)
-    #print(f"初始化ddddocr耗时: {time.time() - start_time:.4f} 秒")
+    # print(f"初始化ddddocr耗时: {time.time() - start_time:.4f} 秒")
 
     start_time = time.time()
     with open(captcha_save_path, "rb") as file:
@@ -359,18 +398,18 @@ def goLogin():
     # 输入账号
     username_input = driver.find_element(By.ID, "username")
     username_input.send_keys(accountInfo.account)  # 替换为实际的用户名
-    #time.sleep(0.5)
+    # time.sleep(0.5)
 
     # 输入密码
     password_input = driver.find_element(By.ID, "password")
     password_input.send_keys(accountInfo.password)  # 替换为实际的密码
-    #time.sleep(0.5)
+    # time.sleep(0.5)
 
     # 输入验证码
     captcha_input = driver.find_element(By.ID, "addcode")
     captcha_input.clear()  # 清空验证码输入框（如果有默认值）
     captcha_input.send_keys(captcha_result)
-    #time.sleep(0.5)
+    # time.sleep(0.5)
 
     # 点击登录按钮
     login_button = driver.find_element(By.ID, "logincommit")
@@ -378,14 +417,12 @@ def goLogin():
 
 
 # 打开登录页面 并且自动登录
-
-
 start_time = time.time()
 driver.get(login_url)
 
 # 增加等待时间以确保页面完全加载
 time.sleep(3)  # 根据实际情况调整等待时间
-#print(f"打开登录界面耗时:{time.time() - start_time:.4f} 秒")
+# print(f"打开登录界面耗时:{time.time() - start_time:.4f} 秒")
 # 开始捕获流量
 proxy.new_har("fj", options={"captureHeaders": True, "captureContent": True})
 goLogin()
@@ -395,7 +432,12 @@ try:
         try:
             alert = driver.switch_to.alert
             print("检测到界面提示信息:", alert.text)
-            write_excel(accountInfo.row, alert.text)
+            if "验证码错误" in alert.text:
+                current_row -= 1
+            if "用户名或密码错误" in alert.text:
+                # 写入成绩表的查询结果明细
+                write_excel(accountInfo.row, alert.text)
+                writeErrorInfo(accountInfo.account, alert.text)
             alert.accept()  # 自动点击确认
             time.sleep(0.5)
             goLogin()
