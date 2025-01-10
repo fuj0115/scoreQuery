@@ -58,7 +58,7 @@ def getCJMC(cj):
 
 # 写入密码错误等信息
 def writeErrorInfo(ksh, errorInfo):
-    workbook = openpyxl.load_workbook(r"D:\getScore\2024学员成绩表.xlsx")
+    workbook = openpyxl.load_workbook(r"D:\getScore\彭老师学员成绩表1-9.xlsx")
     match_sheet = None
     match_row = None
     # 遍历所有sheet页
@@ -93,10 +93,11 @@ def writeErrorInfo(ksh, errorInfo):
         # 根据查到的写入查询明细
         # 写入成绩match_sheet和match_row 再第一个单元格写入详情
         match_sheet.cell(row=match_row, column=1).value = errorInfo
-        workbook.save((r"D:\getScore\2024学员成绩表.xlsx"))
+        workbook.save((r"D:\getScore\彭老师学员成绩表1-9.xlsx"))
 
 
 def writeExcel(resultData):
+    begin_time = time.time()
     # result_str = json.dumps(resultData, ensure_ascii=False, indent=4)
     # print("最终结果:\n" + result_str)
     print("写入excel中...")
@@ -108,8 +109,8 @@ def writeExcel(resultData):
     # 获取当前脚本所在的目录
     # script_dir = os.path.dirname(os.path.abspath(__file__))
     # 构建文件的完整路径
-    # file_path = os.path.join(script_dir, '2024学员成绩表.xlsx')
-    workbook = openpyxl.load_workbook(r"D:\getScore\2024学员成绩表.xlsx")
+    # file_path = os.path.join(script_dir, '彭老师学员成绩表1-9.xlsx')
+    workbook = openpyxl.load_workbook(r"D:\getScore\彭老师学员成绩表1-9.xlsx")
     # 获取准考证号
     ksh = resultData["ksh"]
     xm = resultData["xm"]
@@ -123,6 +124,7 @@ def writeExcel(resultData):
 
     # 遍历所有sheet页
     for sheet_name in workbook.sheetnames:
+        find_time = time.time()
         sheet = workbook[sheet_name]
 
         # 查找包含 "准考证号" 的列
@@ -131,15 +133,16 @@ def writeExcel(resultData):
             header_cell = sheet.cell(row=1, column=col).value
             if header_cell and "准考证号" in str(header_cell):
                 ksh_column = col
-                print(
-                    f'找到 "准考证号" 在{sheet_name},第: {openpyxl.utils.get_column_letter(col)}列'
-                )
+                # print(
+                #     f'找到 "准考证号" 在{sheet_name},第: {openpyxl.utils.get_column_letter(col)}列耗时:{time.time() - find_time:.4f} 秒'
+                # )
                 break
 
         if ksh_column is None:
             print(f'"准考证号" 列不存在: {sheet_name}')
             continue
 
+        # print(f"sheet.max_row: ", sheet.max_row)
         # 查找匹配的行
         for row in range(2, sheet.max_row + 1):  # 从第二行开始遍历，假设第一行为标题行
             cell_value = sheet.cell(row=row, column=ksh_column).value
@@ -147,6 +150,7 @@ def writeExcel(resultData):
                 # print('找到准考证号为 " + str(ksh) + " 的记录"')
                 match_sheet = sheet
                 match_row = row
+                # print(f"找到匹配的行耗时:{time.time() - find_time:.4f} 秒")
                 break
 
         if match_sheet and match_row:
@@ -159,6 +163,7 @@ def writeExcel(resultData):
         driver.refresh()
         return
 
+    # print(f"匹配准考证号耗时:{time.time() - begin_time:.4f} 秒")
     # print(f"找到匹配学生在 sheet: {match_sheet.title}, 行: {match_row}")
 
     # 根据查到的写入查询明细
@@ -195,12 +200,12 @@ def writeExcel(resultData):
                 row=match_row, column=col_index + 1
             )  # 注意这里需要加1，因为openpyxl的列索引是从1开始的
             cell.value = getCJMC(cj)
-            print(f"科目匹配成功 {kmdm}{item['KMMC']}:{getCJMC(cj)} ")
+            # print(f"科目匹配成功 {kmdm}{item['KMMC']}:{getCJMC(cj)} ")
         else:
             print(f"未找到科目代码 {kmdm} 在 Excel 中")
 
     # 保存工作簿
-    workbook.save((r"D:\getScore\2024学员成绩表.xlsx"))
+    workbook.save((r"D:\getScore\彭老师学员成绩表1-9.xlsx"))
     print(xm + "成绩已成功写入 Excel 文件")
     reason = (
         "找到excel匹配学生在 sheet: "
@@ -210,6 +215,7 @@ def writeExcel(resultData):
         + " 行,成绩已成功写入 Excel 文件"
     )
     write_excel(accountInfo.row, reason)
+    print(f"写入excel耗时:{time.time() - begin_time:.4f} 秒")
     driver.back()
     driver.refresh()
     goLogin()
