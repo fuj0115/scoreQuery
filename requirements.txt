@@ -1,0 +1,7 @@
+browsermob_proxy==0.8.0
+ddddocr==1.5.6
+numpy==2.2.1
+opencv_python_headless==4.10.0.84
+openpyxl==3.1.5
+Requests==2.32.3
+selenium==4.27.1
