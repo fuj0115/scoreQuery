@@ -25,7 +25,7 @@ import sys
 current_row = 2
 accountInfo = None
 reason = ""
-fileUrl = "D:\getScore\蔡老师-学员成绩表1月5日.xlsx"
+fileUrl = "D:\getScore\彭老师学员.xlsx"
 
 
 def get_resource_path(relative_path):
@@ -172,7 +172,7 @@ def writeExcel(resultData):
 
     # 根据查到的写入查询明细
     # 写入成绩match_sheet和match_row 再第一个单元格写入详情
-    match_sheet.cell(row=match_row, column=1).value = detailStr
+    # match_sheet.cell(row=match_row, column=1).value = detailStr
     # match_sheet.cell(row=match_row, column=2).value = xm 注释先，不要姓名匹配了
 
     # 获取第一行的所有单元格内容
@@ -221,8 +221,12 @@ def writeExcel(resultData):
             cell.value = getCJMC(cj)
             # print(f"科目匹配成功 {kmdm}{item['KMMC']}:{getCJMC(cj)} ")
         else:
+            detailStr += "\n未找到科目代码 " + str(kmdm) + " 在 Excel 中"
             print(f"未找到科目代码 {kmdm} 在 Excel 中")
 
+    # 写入成绩match_sheet和match_row 再第一个单元格写入详情
+    match_sheet.cell(row=match_row, column=1).value = detailStr
+    print("detailStr：" + detailStr)
     # 保存工作簿
     workbook.save(fileUrl)
     print(xm + "成绩已成功写入 Excel 文件")
