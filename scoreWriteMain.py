@@ -25,6 +25,7 @@ import sys
 current_row = 2
 accountInfo = None
 reason = ""
+fileUrl = "D:\getScore\蔡老师-学员成绩表1月5日.xlsx"
 
 
 def get_resource_path(relative_path):
@@ -59,7 +60,7 @@ def getCJMC(cj):
 
 # 写入密码错误等信息
 def writeErrorInfo(ksh, errorInfo):
-    workbook = openpyxl.load_workbook(r"D:\getScore\彭老师学员成绩表1-9.xlsx")
+    workbook = openpyxl.load_workbook(fileUrl)
     match_sheet = None
     match_row = None
     # 遍历所有sheet页
@@ -94,7 +95,7 @@ def writeErrorInfo(ksh, errorInfo):
         # 根据查到的写入查询明细
         # 写入成绩match_sheet和match_row 再第一个单元格写入详情
         match_sheet.cell(row=match_row, column=1).value = errorInfo
-        workbook.save((r"D:\getScore\彭老师学员成绩表1-9.xlsx"))
+        workbook.save((fileUrl))
 
 
 def writeExcel(resultData):
@@ -111,7 +112,7 @@ def writeExcel(resultData):
     # script_dir = os.path.dirname(os.path.abspath(__file__))
     # 构建文件的完整路径
     # file_path = os.path.join(script_dir, '彭老师学员成绩表1-9.xlsx')
-    workbook = openpyxl.load_workbook(r"D:\getScore\彭老师学员成绩表1-9.xlsx")
+    workbook = openpyxl.load_workbook(fileUrl)
     # 获取准考证号
     ksh = resultData["ksh"]
     xm = resultData["xm"]
@@ -172,7 +173,7 @@ def writeExcel(resultData):
     # 根据查到的写入查询明细
     # 写入成绩match_sheet和match_row 再第一个单元格写入详情
     match_sheet.cell(row=match_row, column=1).value = detailStr
-    match_sheet.cell(row=match_row, column=2).value = xm
+    # match_sheet.cell(row=match_row, column=2).value = xm 注释先，不要姓名匹配了
 
     # 获取第一行的所有单元格内容
     first_row_cells = []
@@ -183,19 +184,19 @@ def writeExcel(resultData):
         else:
             first_row_cells.append(None)
 
-    for index, title in enumerate(first_row_cells):
-        if title is not None and title.strip() == "姓名":
-            old_name = match_sheet.cell(row=match_row, column=index + 1).value
-            match_sheet.cell(row=match_row, column=3).value = old_name == xm
-            if old_name != xm:
-                color_fill = PatternFill(
-                    start_color="FF0000", end_color="FF0000", fill_type="solid"
-                )
-            else:
-                color_fill = PatternFill(
-                    start_color="00FF00", end_color="00FF00", fill_type="solid"
-                )
-            match_sheet.cell(row=match_row, column=3).fill = color_fill
+    # for index, title in enumerate(first_row_cells): 注释先，不要姓名匹配了
+    #     if title is not None and title.strip() == "姓名":
+    #         old_name = match_sheet.cell(row=match_row, column=index + 1).value
+    #         match_sheet.cell(row=match_row, column=3).value = old_name == xm
+    #         if old_name != xm:
+    #             color_fill = PatternFill(
+    #                 start_color="FF0000", end_color="FF0000", fill_type="solid"
+    #             )
+    #         else:
+    #             color_fill = PatternFill(
+    #                 start_color="00FF00", end_color="00FF00", fill_type="solid"
+    #             )
+    #         match_sheet.cell(row=match_row, column=3).fill = color_fill
 
     # 创建 KMDM 到列索引的映射（模糊匹配）
     kmdm_to_col_index = {}
@@ -223,7 +224,7 @@ def writeExcel(resultData):
             print(f"未找到科目代码 {kmdm} 在 Excel 中")
 
     # 保存工作簿
-    workbook.save((r"D:\getScore\彭老师学员成绩表1-9.xlsx"))
+    workbook.save(fileUrl)
     print(xm + "成绩已成功写入 Excel 文件")
     reason = (
         "找到excel匹配学生在 sheet: "
