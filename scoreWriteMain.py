@@ -19,13 +19,14 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoAlertPresentException, TimeoutException
 from openpyxl.styles import PatternFill
+from datetime import datetime
 import sys
 
 # 从Excel表格中读取账号和密码 第2行开始
 current_row = 2
 accountInfo = None
 reason = ""
-fileUrl = "D:\getScore\彭老师学员.xlsx"
+fileUrl = "D:\getScore\蔡老师-学员成绩表3月18日.xlsx"
 
 
 def get_resource_path(relative_path):
@@ -120,8 +121,16 @@ def writeExcel(resultData):
     idcard = resultData["idcard"]
     kmcjTotal = resultData["kmcjTotal"]
     sjkcjTotal = resultData["sjkcjTotal"]
+    current_date = datetime.now().strftime("%Y-%m-%d")
     detailStr = (
-        "笔试已过" + str(kmcjTotal) + "科" + ",实践课已过" + str(sjkcjTotal) + "科"
+        current_date
+        + "查询:"
+        + "笔试已过"
+        + str(kmcjTotal)
+        + "科"
+        + ",实践课已过"
+        + str(sjkcjTotal)
+        + "科"
     )
     match_sheet = None
     match_row = None
@@ -331,7 +340,7 @@ chrome_options = webdriver.ChromeOptions()
 chrome_options.add_argument(f"--proxy-server={proxy.proxy}")
 
 # 指定 ChromeDriver 路径
-driver_path = get_resource_path(r"chromedriver-win64\chromedriver.exe")
+driver_path = get_resource_path(r"D:\getScore\chromedriver-win64\chromedriver.exe")
 
 # 初始化WebDriver
 driver = webdriver.Chrome(service=Service(driver_path), options=chrome_options)
@@ -463,12 +472,13 @@ try:
         try:
             alert = driver.switch_to.alert
             print("检测到界面提示信息:", alert.text)
+            current_date = datetime.now().strftime("%Y-%m-%d")
             if "验证码错误" in alert.text:
                 current_row -= 1
             if "用户名或密码错误" in alert.text:
                 # 写入成绩表的查询结果明细
-                write_excel(accountInfo.row, alert.text)
-                writeErrorInfo(accountInfo.account, alert.text)
+                write_excel(accountInfo.row, current_date + "查询:" + alert.text)
+                writeErrorInfo(accountInfo.account, current_date + "查询:" + alert.text)
             alert.accept()  # 自动点击确认
             time.sleep(0.5)
             goLogin()
